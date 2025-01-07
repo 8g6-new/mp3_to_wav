@@ -72,6 +72,7 @@ void readFile(const char *filename, uint64_t *size, uint8_t **data) {
 
 
 info slice_mp3_to_wav(char *input_filename, char *output_fn, float lengths[][2], unsigned short length) {
+
     info INFO               = {0};
 
     static mp3dec_t mp3d;
@@ -219,6 +220,6 @@ int main(int argc, char *argv[]) {
 }
 
 
-//gcc -mavx -o mp3_to_wav mp3_wav.c -O3 -march=native -ffast-math -funroll-loops -lm
+//
 //./slice_mp3_to_wav "../tests/files/25/Black Woodpecker/0.mp3" "./a.wav" "1,2" "2,3"
 

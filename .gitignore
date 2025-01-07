@@ -1,0 +1,15 @@
+# Ignore MP3 files
+*.mp3
+
+# Ignore WAV files
+*.wav
+
+# Ignore common binary files (without extensions)
+*.[Oo] # Object files (compiled source code)
+*.[Aa] # Static libraries
+
+# Ignore executables without extension (e.g. binaries or compiled programs)
+*/ # Ignore all files in directories (if needed)
+
+# Ignore any file that does not match typical source code or text file patterns
+*.[Bb]in
