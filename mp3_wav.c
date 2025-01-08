@@ -164,7 +164,7 @@ info slice_mp3_to_wav(char *input_filename, char *output_fn, float lengths[][2],
         char output_filename[512];
         snprintf(output_filename, sizeof(output_filename), "%s_slice_%d.wav", output_fn, i + 1);
         
-        writeWave(output_filename, slice, slice_samples/ INFO.channels,INFO.channels, INFO.sr, INFO.bit_rate);
+        writeWave(output_filename, slice, slice_samples/ INFO.channels,INFO.channels, INFO.sr);
 
         free(slice);
     }

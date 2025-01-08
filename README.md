@@ -51,7 +51,14 @@ wget -O "test.mp3" "https://onlinetestcase.com/wp-content/uploads/2023/06/10-MB-
 ```bash
 ./mp3_to_wav "test.mp3" "a" "1,2" "2,3" 
 ```
-Should create 2 1 second length wav files which starts from 1 and 2 and ends at 2 and 3 respectvly
+Expected output
+
+```bash
+a_slice_1.wav Float 32 bit WAV file written successfully.
+a_slice_2.wav Float 32 bit WAV file written successfully.
+```
+a_slice_1.wav Float 32 bit WAV file written successfully.
+a_slice_2.wav Float 32 bit WAV file written successfully.
 
 ## Functions I/O
 

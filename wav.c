@@ -39,7 +39,7 @@ static void init_wav_header(wav_header* header, int format_tag, int channels, in
     header->file_length     = data_length + sizeof(wav_header) - 8;  
 }
 
-int write_pcm_wav(const char *filename, const int16_t *pcm, uint32_t sample_count, int channels, int sample_rate, int kbits_per_sec) {
+int write_pcm_wav(const char *filename, const int16_t *pcm, uint32_t sample_count, int channels, int sample_rate) {
     
     wav_header header;
     uint32_t data_length = sample_count * channels * sizeof(int16_t);
@@ -72,7 +72,7 @@ int write_pcm_wav(const char *filename, const int16_t *pcm, uint32_t sample_coun
     return 0;
 }
 
-int write_float_wav(const char *filename, const float *pcm, uint32_t sample_count,int channels, int sample_rate, int kbits_per_sec) {
+int write_float_wav(const char *filename, const float *pcm, uint32_t sample_count,int channels, int sample_rate) {
     
     wav_header header;
     uint32_t data_length = sample_count * channels * sizeof(float);
