@@ -1,12 +1,6 @@
-# A Minimal MP3 to WAV Slicing Tool
-=====================================
+# A Minimal MP3 to WAV Slicing/Converting tool based on minimp3
 
-This project provides a utility to slice an MP3 file into multiple WAV segments. It uses the [minimp3](https://github.com/lieff/minimp3) library, a minimalistic MP3 decoder library, to decode MP3 files and supports SIMD optimizations for improved performance. The program takes an MP3 file, a set of start and end times for slices, and produces WAV files for each slice.
-
-## Credits
---------
-
-This project relies on the [minimp3](https://github.com/lieff/minimp3) library, which is a minimalistic MP3 decoder library. The [minimp3](https://github.com/lieff/minimp3) library is developed and maintained by [Lieff](https://github.com/lieff), and is available under the [MIT License](https://github.com/lieff/minimp3/blob/master/LICENSE).
+This project provides a utility to slice an MP3 file into multiple WAV segments. It uses the [minimp3](https://github.com/lieff/minimp3) library, a minimalistic MP3 decoder library, to decode MP3 files and supports SIMD optimizations for improved performance.
 
 ## Features
 --------
@@ -47,10 +41,16 @@ To use the program, simply run the compiled executable with the following argume
 * `ends`: A comma-separated list of end times for each slice.
 
 Example:
+
+1. Download a test mp3 file
 ```bash
-./mp3_to_wav input.mp3 output_folder 0,10,20 10,20,30
+wget -O "test.mp3" "https://onlinetestcase.com/wp-content/uploads/2023/06/10-MB-MP3.mp3"
 ```
-This will slice the `input.mp3` file into three segments, starting at 0 seconds, 10 seconds, and 20 seconds, and ending at 10 seconds, 20 seconds, and 30 seconds, respectively. The sliced WAV files will be saved in the `output_folder`.
+2. Convert 
+```bash
+./mp3_to_wav "test.mp3" "a" "1,2" "2,3"
+// Should create 2 1 second length wav files which starts from 1 and 2 and ends at 2 ans 3 respectvly 
+```
 
 ## License
 -------
@@ -60,8 +60,6 @@ This project is licensed under the [MIT License](https://github.com/your-usernam
 ## Acknowledgments
 --------------
 
-This project would not have been possible without the [minimp3](https://github.com/lieff/minimp3) library, which is a minimalistic MP3 decoder library developed and maintained by [Lieff](https://github.com/lieff).
+This project uses the [minimp3](https://github.com/lieff/minimp3) library, a minimalistic MP3 decoder library developed and maintained by [Lieff](https://github.com/lieff).
 
 [Original minimp3 repository](https://github.com/lieff/minimp3)
-
-[MIT License](https://github.com/lieff/minimp3/blob/master/LICENSE)
