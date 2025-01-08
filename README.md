@@ -10,6 +10,7 @@ This project provides a utility to slice an MP3 file into multiple WAV segments.
 * Supports SIMD optimizations (AVX) for faster processing.
 * Flexible slicing functionality to support multiple segments.
 * Outputs each slice as a separate WAV file.
+* To switch between 16-bit PCM and floating-point output, simply comment out or uncomment the `#define MINIMP3_FLOAT_OUTPUT` directive. When uncommented, the output will be in floating-point format; when commented out, the output will be in 16-bit PCM format.
 
 ## Dependency
 ------------
@@ -48,9 +49,34 @@ wget -O "test.mp3" "https://onlinetestcase.com/wp-content/uploads/2023/06/10-MB-
 ```
 2. Convert 
 ```bash
-./mp3_to_wav "test.mp3" "a" "1,2" "2,3"
-// Should create 2 1 second length wav files which starts from 1 and 2 and ends at 2 ans 3 respectvly 
+./mp3_to_wav "test.mp3" "a" "1,2" "2,3" 
 ```
+Should create 2 1 second length wav files which starts from 1 and 2 and ends at 2 and 3 respectvly
+
+## Functions I/O
+
+### 1. `slice_mp3_to_wav`
+#### Inputs:
+- `char *input_filename`: Path to the MP3 file to convert.
+- `char *output_fn`: Prefix for output WAV filenames.
+- `float lengths[][2]`: Array of time ranges (start and end times) for slicing the audio.
+- `unsigned short length`: The number of slices to create.
+
+#### Outputs:
+- `info`: A structure containing the sample rate, bit rate, and number of channels of the MP3 file.
+
+---
+
+### 2. `get_lengths`
+#### Inputs:
+- `char *starts`: Comma-separated string of start times.
+- `char *ends`: Comma-separated string of end times.
+- `float lengths[][2]`: Array to store the parsed start and end times.
+
+#### Outputs:
+- `lengths`: A populated array of start and end times.
+- Returns: The number of valid time slices parsed.
+
 
 ## License
 -------

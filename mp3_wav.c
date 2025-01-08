@@ -26,7 +26,6 @@
 
 typedef struct  {
     int sr;
-    int bit_rate;
     int channels;
 } info;
 
@@ -126,6 +125,12 @@ info slice_mp3_to_wav(char *input_filename, char *output_fn, float lengths[][2],
             INFO.channels   = info.channels;
             INFO.sr         = info.hz;
             decoded_samples += samples;
+
+            // printf("Frame bytes: %d\n", info.frame_bytes);
+            // printf("Channels: %d\n", info.channels);
+            // printf("Sample rate: %d Hz\n", info.hz);
+            // printf("Layer: %d\n", info.layer);
+            // printf("Bitrate: %d kbps\n", info.bitrate_kbps);
         }
 
         input_buf           += info.frame_bytes;
@@ -220,6 +225,4 @@ int main(int argc, char *argv[]) {
 }
 
 
-//
-//./slice_mp3_to_wav "../tests/files/25/Black Woodpecker/0.mp3" "./a.wav" "1,2" "2,3"
 
