@@ -37,7 +37,7 @@ This project provides a utility to slice an MP3 file into multiple WAV segments.
 To use the program, simply run the compiled executable with the following arguments:
 
 * `input.mp3`: The input MP3 file to be sliced.
-* `output_folder`: The folder where the sliced WAV files will be saved.
+* `output_folder`: The file name .
 * `starts`: A comma-separated list of start times for each slice.
 * `ends`: A comma-separated list of end times for each slice.
 
