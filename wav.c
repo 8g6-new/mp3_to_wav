@@ -19,7 +19,7 @@ typedef struct {
     char     data[4];         /* "data"                                 */
     uint32_t data_length;     /* data length in bytes                   */
 } wav_header;
-#pragma pack(pop)
+#pragma pack(pop)             /* to restore the shaped ( remove compiler padding */
 
 
 static void init_wav_header(wav_header* header, int format_tag, int channels, int sample_rate, int bits_per_sample, uint32_t data_length) {
