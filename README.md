@@ -49,7 +49,7 @@ wget -O "test.mp3" "https://onlinetestcase.com/wp-content/uploads/2023/06/10-MB-
 ```
 2. Convert 
 ```bash
-./mp3_to_wav "test.mp3" "a" "1,2" "2,3" 
+./mp3_to_wav "test.mp3" "a,b" "1,2" "2,3" 
 ```
 Expected output
 
@@ -57,8 +57,6 @@ Expected output
 a_slice_1.wav Float 32 bit WAV file written successfully.
 a_slice_2.wav Float 32 bit WAV file written successfully.
 ```
-a_slice_1.wav Float 32 bit WAV file written successfully.
-a_slice_2.wav Float 32 bit WAV file written successfully.
 
 ## Functions I/O
 
