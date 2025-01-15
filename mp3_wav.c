@@ -21,15 +21,14 @@
 
 #include "wav.c"
 
-#define MAX_SLICES 100
+#define MAX_SLICES 200
 #define DELIMITER ","
+#define MAX_FN_LENGTH 512
 
 typedef struct  {
     int sr;
     int channels;
 } info;
-
-
 
 void readFile(const char *filename, uint64_t *size, uint8_t **data) {
     *size = 0;
@@ -69,8 +68,7 @@ void readFile(const char *filename, uint64_t *size, uint8_t **data) {
     fclose(fin);
 }
 
-
-info slice_mp3_to_wav(char *input_filename, char *output_fn, float lengths[][2], unsigned short length) {
+info slice_mp3_to_wav(char *input_filename, char *output_fn, float lengths[][2], unsigned short length, char output_strs[][MAX_FN_LENGTH]) {
 
     info INFO               = {0};
 
@@ -144,13 +142,14 @@ info slice_mp3_to_wav(char *input_filename, char *output_fn, float lengths[][2],
 
     for (int i = 0; i < length; i++) {
         if (lengths[i][0] < 0 || lengths[i][1] <= lengths[i][0] || 
+
             lengths[i][1] > (float)decoded_samples / INFO.sr) {
             fprintf(stderr, "Invalid time range for slice %d: [%f, %f]\n", i + 1, lengths[i][0], lengths[i][1]);
             continue;
         }
 
-        uint64_t start_sample = (uint64_t)(lengths[i][0] * INFO.sr) * INFO.channels;
-        uint64_t end_sample = (uint64_t)(lengths[i][1] * INFO.sr) * INFO.channels;
+        uint64_t start_sample  = (uint64_t)(lengths[i][0] * INFO.sr) * INFO.channels;
+        uint64_t end_sample    = (uint64_t)(lengths[i][1] * INFO.sr) * INFO.channels;
         uint64_t slice_samples = end_sample - start_sample;
 
         DATA *slice = malloc(slice_samples * data_size);
@@ -161,10 +160,10 @@ info slice_mp3_to_wav(char *input_filename, char *output_fn, float lengths[][2],
 
         memcpy(slice, full_pcm + start_sample, slice_samples * data_size);
 
-        char output_filename[512];
-        snprintf(output_filename, sizeof(output_filename), "%s_slice_%d.wav", output_fn, i + 1);
+        char output_filename[780];
+        snprintf(output_filename, sizeof(output_filename), "%s_slice_%d.wav", output_strs[i],i + 1);
         
-        writeWave(output_filename, slice, slice_samples/ INFO.channels,INFO.channels, INFO.sr);
+        writeWave(output_filename, slice, slice_samples/ INFO.channels, INFO.channels, INFO.sr);
 
         free(slice);
     }
@@ -174,28 +173,32 @@ info slice_mp3_to_wav(char *input_filename, char *output_fn, float lengths[][2],
     return INFO;
 }
 
-
-unsigned short get_lengths(char *starts, char *ends, float lengths[][2]) {
+unsigned short get_lengths(char *output_fns,char *starts, char *ends, float lengths[][2], char output_strs[][MAX_FN_LENGTH]) {
     unsigned short count = 0;
 
     char *rest_starts = starts;
     char *rest_ends   = ends;
+    char *rest_output_fns = output_fns;
 
     char *start_token = strtok_r(rest_starts, DELIMITER, &rest_starts);
     char *end_token   = strtok_r(rest_ends, DELIMITER, &rest_ends);
+    char *output_fn_token = strtok_r(rest_output_fns, DELIMITER, &rest_output_fns);
 
-    while (start_token != NULL && end_token != NULL && count < MAX_SLICES) {
+    while (start_token != NULL && end_token != NULL && output_fn_token != NULL && count < MAX_SLICES) {
 
         float start_value = atof(start_token);
         float end_value   = atof(end_token);
 
-        lengths[count][0]  = start_value;
-        lengths[count][1]  = end_value;
+        lengths[count][0] = start_value;
+        lengths[count][1] = end_value;
+
+        strcpy(output_strs[count], output_fn_token);
 
         count++;
 
         start_token = strtok_r(NULL, DELIMITER, &rest_starts);
         end_token   = strtok_r(NULL, DELIMITER, &rest_ends);
+        output_fn_token = strtok_r(NULL, DELIMITER, &rest_output_fns);
     }
 
     return count;
@@ -203,14 +206,15 @@ unsigned short get_lengths(char *starts, char *ends, float lengths[][2]) {
 
 int main(int argc, char *argv[]) {
     if (argc != 5) {
-        fprintf(stderr, "Usage: %s <input mp3> <output fn> <starts> <ends>\n", argv[0]);
+        fprintf(stderr, "Usage: %s <input mp3> <outputs> <starts> <ends>\n", argv[0]);
         return 1;
     }
     
     float lengths[MAX_SLICES][2];
+    char out_fns[MAX_SLICES][MAX_FN_LENGTH];
 
     char *input_filename  = argv[1];
-    char *output_filename = argv[2];
+    char *output_fns      = strdup(argv[2]);
     char *starts          = strdup(argv[3]);
     char *ends            = strdup(argv[4]);
 
@@ -219,10 +223,13 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    unsigned short length = get_lengths(starts, ends, lengths);
+    unsigned short length = get_lengths(output_fns, starts, ends, lengths, out_fns);
 
-    slice_mp3_to_wav(input_filename,output_filename,lengths, length);
+    slice_mp3_to_wav(input_filename, NULL, lengths, length, out_fns);
+
+    free(starts);
+    free(ends);
+    free(output_fns);
+
+    return 0;
 }
-
-
-
