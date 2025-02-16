@@ -340,16 +340,25 @@ int main(int argc, char *argv[]) {
 
     audio_data audio   = {0};
 
-    if(type == 1){
-        audio = read_mp3(input_filename);
+    switch (type) {
+        case 1:
+            audio = read_mp3(input_filename);
+            break;
+        case 2:
+            audio = read_wav(input_filename);
+            break;
+        default:
+            break;
     }
-    if(type==2){
-        audio = read_wav(input_filename);
-    }
-
+    
+    // pthreaded slices writing
     async_sliced_write_wave(&audio,lengths,length,out_fns);
+     
+    // Normal slices writing
+    //sliced_write_wave(&audio,lengths,length,out_fns);
 
     clock_gettime(CLOCK_MONOTONIC, &end);
+    
     long elapsed_time = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_nsec - start.tv_nsec) / 1000;
 
     printf("Time taken: %ld microseconds\n", elapsed_time);
