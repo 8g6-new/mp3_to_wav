@@ -30,7 +30,7 @@ This project provides a utility to slice MP3 or WAV audio files into multiple WA
 
 2. Compile source file (mp3_wav.c)
     ```bash
-    gcc -mavx -o mp3_to_wav mp3_wav.c -O3 -march=native -ffast-math -funroll-loops -lm -lsndfile -pthread
+    gcc -mavx -o conv main.c -O3 -march=native -ffast-math -funroll-loops -lm -lsndfile -pthread
     ```
 
 ## Usage
