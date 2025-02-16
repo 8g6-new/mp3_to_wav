@@ -73,11 +73,13 @@ The code supports asynchronous multithreaded slicing (default). For sequential p
 While a custom WAV reader was initially considered, the variety in WAV file formats made libsndfile the optimal choice for robust input handling. In contrast, a custom WAV writer was implemented to allow fine-tuned control over output performance, such as the use of asynchronous I/O and direct file structure manipulation.
 
 # Why this project 
+Initially, this project was created as a faster alternative to FFMPEG for converting MP3 to WAV, specifically to improve the preprocessing speed for generating spectrograms with my C-based spectrogram tool.
+
 In theory, my implementation should perform better since it avoids unnecessary processing and is optimized for this specific task. However, after running benchmarks, the results were surprising FFMPEG still outperforms my implementation by 1-2% in speed. Given that my code only handles a small subset of what FFMPEG can do (without format conversion overheads, filters, or optimizations at its scale), this experience gave me even more appreciation for FFMPEG’s engineering.
 
 That being said, this project is far from a wasted effort. A major advantage of having this custom MP3 decoder is that my spectrogram generator can now directly support MP3 files without requiring intermediate WAV conversions. This will significantly speed up processing since all MP3 data can be loaded into memory at once, eliminating the disk I/O bottleneck of repeatedly reading WAV slices.
 
-There’s still room for optimization—future improvements like better memory management, deeper profiling, and adding async I/O might help close the performance gap with FFMPEG or even surpass it in this specific use case. So, I’ll be giving this another attempt in the future.
+There’s still room for optimization future improvements like better memory management, deeper profiling, and adding async I/O might help close the performance gap with FFMPEG or even surpass it in this specific use case. So, I’ll be giving this another attempt in the future.
 
 ## License
 -------
