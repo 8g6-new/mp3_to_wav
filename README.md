@@ -1,34 +1,36 @@
-# A Minimal MP3 to WAV Slicing/Converting tool based on minimp3
+# MP3/WAV to WAV Slicing Tool
 
-This project provides a utility to slice an MP3 file into multiple WAV segments. It uses the [minimp3](https://github.com/lieff/minimp3) library, a minimalistic MP3 decoder library, to decode MP3 files and supports SIMD optimizations for improved performance.
+This project provides a utility to slice MP3 or WAV audio files into multiple WAV segments based on specified time ranges. It utilizes the [minimp3](https://github.com/lieff/minimp3) library for MP3 decoding, the [libsndfile](http://www.mega-nerd.com/libsndfile/) library for WAV file handling, and employs multithreading with pthreads and asynchronous I/O for optimized performance.
 
 ## Features
---------
 
-* Single dependency of [minimp3](https://github.com/lieff/minimp3) which is already included in this directory.
-* Slices the decoded audio based on specified time ranges.
-* Supports SIMD optimizations (AVX) for faster processing.
-* Flexible slicing functionality to support multiple segments.
+* Supports both MP3 and WAV input formats.
+* Uses [minimp3](https://github.com/lieff/minimp3) for MP3 decoding (included).
+* Employs [libsndfile](https://github.com/libsndfile/libsndfile) for WAV file reading and writing.
+* Slices audio based on provided start and end times.
+* Flexible slicing for multiple segments.
 * Outputs each slice as a separate WAV file.
-* To switch between 16-bit PCM and floating-point output, simply comment out or uncomment the `#define MINIMP3_FLOAT_OUTPUT` directive. When uncommented, the output will be in floating-point format; when commented out, the output will be in 16-bit PCM format.
+* Configurable output format: 16-bit PCM or 32-bit floating-point.
+* Multithreading with pthreads for concurrent slice processing.
 
-## Dependency
+## Dependencies
+
+* **minimp3**: A minimalistic MP3 decoder library. ([Included in the repository](https://github.com/lieff/minimp3))
+* **libsndfile**: A library for reading and writing audio files.  Install system-wide (e.g., `sudo apt-get install libsndfile1-dev` on Debian/Ubuntu, `brew install libsndfile` on macOS).
 ------------
-
-* **minimp3**: A minimalistic MP3 decoder library. ([Included in the directory](https://github.com/lieff/minimp3))
 
 ## Installation
 ------------
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/slice_mp3_to_wav.git
-   cd slice_mp3_to_wav
+   git clone https://github.com/your-username/mp3_to_wav.git
+   cd mp3_to_wav
    ```
 
 2. Compile source file (mp3_wav.c)
     ```bash
-    gcc -mavx -o mp3_to_wav mp3_wav.c -O3 -march=native -ffast-math -funroll-loops -lm 
+    gcc -mavx -o mp3_to_wav mp3_wav.c -O3 -march=native -ffast-math -funroll-loops -lm -lsndfile -pthread
     ```
 
 ## Usage
@@ -54,39 +56,38 @@ wget -O "test.mp3" "https://onlinetestcase.com/wp-content/uploads/2023/06/10-MB-
 Expected output
 
 ```bash
-a_slice_1.wav Float 32 bit WAV file written successfully.
-a_slice_2.wav Float 32 bit WAV file written successfully.
+a.wav Float 32 bit WAV file written successfully.
+b.wav Float 32 bit WAV file written successfully.
 ```
 
-## Functions I/O
+## Configuration Options
 
-### 1. `slice_mp3_to_wav`
-#### Inputs:
-- `char *input_filename`: Path to the MP3 file to convert.
-- `char *output_fn`: Prefix for output WAV filenames.
-- `float lengths[][2]`: Array of time ranges (start and end times) for slicing the audio.
-- `unsigned short length`: The number of slices to create.
+### Output Format:
+By default, the tool produces 32-bit floating-point WAV files. To switch to 16-bit PCM, modify the compile-time definitions (e.g., disable MINIMP3_FLOAT_OUTPUT).
 
-#### Outputs:
-- `info`: A structure containing the sample rate, bit rate, and number of channels of the MP3 file.
+### Slicing Mode:
+The code supports asynchronous multithreaded slicing (default). For sequential processing, you can replace the call to async_sliced_write_wave with sliced_write_wave in the main() function.
 
----
+## Why Use libsndfile?
 
-### 2. `get_lengths`
-#### Inputs:
-- `char *starts`: Comma-separated string of start times.
-- `char *ends`: Comma-separated string of end times.
-- `float lengths[][2]`: Array to store the parsed start and end times.
+While a custom WAV reader was initially considered, the variety in WAV file formats made libsndfile the optimal choice for robust input handling. In contrast, a custom WAV writer was implemented to allow fine-tuned control over output performance, such as the use of asynchronous I/O and direct file structure manipulation.
 
-#### Outputs:
-- `lengths`: A populated array of start and end times.
-- Returns: The number of valid time slices parsed.
+# Why this project 
+In theory, my implementation should perform better since it avoids unnecessary processing and is optimized for this specific task. However, after running benchmarks, the results were surprising FFMPEG still outperforms my implementation by 1-2% in speed. Given that my code only handles a small subset of what FFMPEG can do (without format conversion overheads, filters, or optimizations at its scale), this experience gave me even more appreciation for FFMPEG’s engineering.
 
+That being said, this project is far from a wasted effort. A major advantage of having this custom MP3 decoder is that my spectrogram generator can now directly support MP3 files without requiring intermediate WAV conversions. This will significantly speed up processing since all MP3 data can be loaded into memory at once, eliminating the disk I/O bottleneck of repeatedly reading WAV slices.
+
+There’s still room for optimization—future improvements like better memory management, deeper profiling, and adding async I/O might help close the performance gap with FFMPEG or even surpass it in this specific use case. So, I’ll be giving this another attempt in the future.
 
 ## License
 -------
 
 This project is licensed under the [MIT License](https://github.com/your-username/slice_mp3_to_wav/blob/master/LICENSE).
+
+
+## TODO
+- [ ]  Asynchronous I/O: Explore further optimizations for asynchronous I/O, such as double buffering or direct I/O. Benchmark to assess the benefits.
+- [ ]   More Audio Formats: Investigate adding support for other audio formats (e.g., FLAC, OGG, etc.) as input formats. This would likely involve integrating additional decoding libraries or leveraging libsndfile's capabilities further.
 
 ## Acknowledgments
 --------------
