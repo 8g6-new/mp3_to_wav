@@ -30,40 +30,118 @@ This project provides a utility to slice MP3 or WAV audio files into multiple WA
 
 2. Compile source file (mp3_wav.c)
     ```bash
-    gcc -mavx -o conv main.c -O3 -DMINIMP3_FLOAT_OUTPUT -march=native -ffast-math -funroll-loops -lm -lsndfile -pthread 
-    ```
+    gcc -mavx -o conv main.c -O3 -DMINIMP3_FLOAT_OUTPUT -march=native -ffast-math-O3 -march=native  -funroll-loops -fomit-frame-pointer -flto
 
-## Usage
------
 
-To use the program, simply run the compiled executable with the following arguments:
+# Audio Splitter Usage Guide
 
-* `input.mp3`: The input MP3 file to be sliced.
-* `output_folder`: The file name .
-* `starts`: A comma-separated list of start times for each slice.
-* `ends`: A comma-separated list of end times for each slice.
 
-Example:
-
-1. Download a test mp3 file
-```bash
-wget -O "test.mp3" "https://onlinetestcase.com/wp-content/uploads/2023/06/10-MB-MP3.mp3"
-```
-2. Convert 
-```bash
-./mp3_to_wav "test.mp3" "a,b" "1,2" "2,3" 
-```
-Expected output
+For testing purposes download a sample file ( here I choose a xeno-canto bird audio recording )
 
 ```bash
-a.wav Float 32 bit WAV file written successfully.
-b.wav Float 32 bit WAV file written successfully.
+wget -O "test.mp3" "https://xeno-canto.org/973558/download"
 ```
+
+The Audio Splitter tool allows you to split audio files (MP3 or WAV) into multiple segments using three different modes.
+
+## Mode 1: Fixed Length Segments  
+Splits the audio into equal-length segments automatically.
+
+### Usage:
+```
+./conv <input_file> AUTO <segment_length> ""
+```
+**Parameters:**  
+- `<input_file>`: Path to the input audio file (MP3 or WAV)  
+- `AUTO`: Keyword to indicate automatic mode  
+- `<segment_length>`: Length of each segment in seconds (numeric value)  
+
+**Example:**
+```
+./conv test.mp3 AUTO "2" ""
+```
+This will create segments of **2 seconds each**:  
+- `input_1.wav` (0-2 seconds)  
+- `input_2.wav` (2-4 seconds)  
+- `input_3.wav` (4-6 seconds)  
+- etc.  
+
+---
+
+## Mode 2: Auto-Named Custom Segments  
+Creates segments with custom time ranges but auto-generated names.
+
+### Usage:
+```
+./conv <input_file> AUTO <start_times> <end_times>
+```
+**Parameters:**  
+- `<input_file>`: Path to the input audio file  
+- `AUTO`: Keyword to indicate automatic naming  
+- `<start_times>`: Comma-separated list of start times in seconds  
+- `<end_times>`: Comma-separated list of end times in seconds  
+
+**Example:**
+```
+./conv test.mp3 AUTO "0,5,10" "5,10,15"
+```
+This will create:  
+- `input_1.wav` (0-5 seconds)  
+- `input_2.wav` (5-10 seconds)  
+- `input_3.wav` (10-15 seconds)  
+
+---
+
+## Mode 3: Custom Named Segments  
+Creates segments with custom time ranges and custom names.
+
+### Usage:
+```
+./conv <input_file> <output_names> <start_times> <end_times>
+```
+**Parameters:**  
+- `<input_file>`: Path to the input audio file  
+- `<output_names>`: Comma-separated list of output filenames (without extension)  
+- `<start_times>`: Comma-separated list of start times in seconds  
+- `<end_times>`: Comma-separated list of end times in seconds  
+
+**Example:**
+```
+./conv test.mp3 "intro,verse,chorus" "0,15,30" "15,30,45"
+```
+This will create:  
+- `intro.wav` (0-15 seconds)  
+- `verse.wav` (15-30 seconds)  
+- `chorus.wav` (30-45 seconds)  
+
+---
+
+## Notes:  
+- **Maximum number of segments:** 400  
+- **Supports both MP3 and WAV input files**  
+- **All output files are in WAV format**  
+- **Times should be specified in seconds**  
+- **For fixed-length mode, the last segment will be truncated if it would exceed the audio length**  
+- **File names are automatically appended with `.wav` extension**  
+
 
 ## Configuration Options
 
 ### Output Format:
-By default, the tool produces 32-bit floating-point WAV files. To switch to 16-bit PCM, modify the compile-time definitions (e.g., disable MINIMP3_FLOAT_OUTPUT).
+By default, the tool produces **16-bit PCM WAV files**, but this can lead to distortion due to improper scaling during MP3 decoding. The **recommended format is 32-bit floating-point**, which avoids these issues and preserves audio quality.
+
+#### Compiler Flags:
+- **Default (16-bit PCM, may cause distortion):**  
+  No extra flags needed.  
+- **Enable 32-bit floating-point output (recommended for accuracy):**  
+  ```bash
+  gcc -DMINIMP3_FLOAT_OUTPUT ...
+  ```
+
+#### Why use 32-bit float?  
+MP3 decoding outputs floating-point values (`[-1.0, 1.0]`), which must be scaled to **16-bit integers (`[-32768, 32767]`)**. If this scaling isn’t handled correctly, it can cause **clipping and distortion**.  
+
+**32-bit floating-point output avoids scaling issues** and ensures the best possible audio quality. **For most cases, it is recommended to use `-DMINIMP3_FLOAT_OUTPUT`** to maintain accuracy and avoid artifacts.
 
 ### Slicing Mode:
 The code supports asynchronous multithreaded slicing (default). For sequential processing, you can replace the call to async_sliced_write_wave with sliced_write_wave in the main() function.
@@ -88,8 +166,10 @@ This project is licensed under the [MIT License](https://github.com/your-usernam
 
 
 ## TODO
-- [ ]  Asynchronous I/O: Explore further optimizations for asynchronous I/O, such as double buffering or direct I/O. Benchmark to assess the benefits.
-- [ ]   More Audio Formats: Investigate adding support for other audio formats (e.g., FLAC, OGG, etc.) as input formats. This would likely involve integrating additional decoding libraries or leveraging libsndfile's capabilities further.
+- [ ] **Fix 16-bit PCM distortion:** The 16-bit output sounds off because of scaling issues. Need to properly normalize MP3’s floating-point values when converting to avoid clipping and weird artifacts.  
+- [ ] **Optimize async I/O:** Look into better async I/O strategies like double buffering or direct I/O to speed things up. Need to run some benchmarks to see what actually helps.  
+- [ ] **Support more audio formats:** Would be nice to add FLAC, OGG, and maybe others. Probably means integrating more decoders or using libsndfile more effectively.  
+
 
 ## Acknowledgments
 --------------

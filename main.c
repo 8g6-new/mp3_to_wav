@@ -6,6 +6,8 @@
 #include <sndfile.h>
 #include <time.h>
 #include <pthread.h>
+#include <ctype.h>
+
 
 #include "wav.c"
 #include "ftype_detect.c"
@@ -13,7 +15,6 @@
 #define MINIMP3_ONLY_MP3
 #define MINIMP3_USE_SIMD
 #define MINIMP3_IMPLEMENTATION
-
 
 
 #ifdef MINIMP3_FLOAT_OUTPUT
@@ -40,11 +41,23 @@ typedef struct {
 #define DELIMITER ","
 #define MAX_FN_LENGTH 512
 
+#define AUTO_MODE "AUTO"
+#define MAX_FILENAME 256
+
+typedef enum {
+    CUSTOM_MODE,
+    AUTO_MODE_CUSTOM_TIMES,
+    FIXED_LENGTH_MODE
+} split_mode_t;
+
+
 typedef struct {
     audio_data *audio;
     float lengths[2];
     char output_str[MAX_FN_LENGTH];
 } thread_args_t;
+
+
 
 void read_file(const char *filename, uint64_t *size, uint8_t **data) {
     *size = 0;
@@ -209,21 +222,24 @@ void *write_wave_thread(void *arg) {
     if (!slice) {
         fprintf(stderr, "Memory allocation failed for slice\n"); // Removed slice number
         pthread_exit(NULL);
-        return NULL; // shut up complier warn 
+        return NULL;  
     }
 
     memcpy(slice, (W_D_TYPE *)audio->samples + start_sample, slice_samples * data_size);
     char output_filename[780];
     snprintf(output_filename, sizeof(output_filename), "%s.wav", output_str);
 
-    write_wave(output_filename, slice, slice_samples / audio->channels, audio->channels, audio->sample_rate);
+    write_wave(output_filename, slice, slice_samples /audio->channels, audio->channels, audio->sample_rate);
 
     free(slice);
     pthread_exit(NULL);
-    return NULL;// shut up complier warn
+    return NULL;
 }
 
 void async_sliced_write_wave(audio_data *audio, float lengths[][2], unsigned short length, char output_strs[][MAX_FN_LENGTH]) {
+
+    if(!audio->channels)
+      audio->channels = 1;
 
     pthread_t threads[length]; 
     thread_args_t thread_args[length];
@@ -250,14 +266,15 @@ void async_sliced_write_wave(audio_data *audio, float lengths[][2], unsigned sho
 
 
 void sliced_write_wave(audio_data *audio, float lengths[][2], unsigned short length, char output_strs[][MAX_FN_LENGTH]) {
+
     size_t data_size = sizeof(W_D_TYPE);
     
     for (int i = 0; i < length; i++) {
-        // if (lengths[i][0] < 0 || lengths[i][1] <= lengths[i][0] || 
-        //     lengths[i][1] > (float)audio->num_samples / audio->sample_rate) {
-        //     fprintf(stderr, "Invalid time range for slice %d: [%f, %f]\n", i + 1, lengths[i][0], lengths[i][1]);
-        //     continue;
-        // }
+        if (lengths[i][0] < 0 || lengths[i][1] <= lengths[i][0] || 
+            lengths[i][1] > (float)audio->num_samples / audio->sample_rate) {
+            fprintf(stderr, "Invalid time range for slice %d: [%f, %f]\n", i + 1, lengths[i][0], lengths[i][1]);
+            continue;
+        }
 
         uint64_t start_sample = (uint64_t)(lengths[i][0] * audio->sample_rate) * audio->channels;
         uint64_t end_sample    = (uint64_t)(lengths[i][1] * audio->sample_rate) * audio->channels;
@@ -279,66 +296,129 @@ void sliced_write_wave(audio_data *audio, float lengths[][2], unsigned short len
         free(slice);
     }
 }
+int is_numeric(const char *str) {
+    while (*str) {
+        if (!isdigit(*str)) return 0;
+        str++;
+    }
+    return 1;
+}
 
-unsigned short get_lengths(char *output_fns,char *starts, char *ends, float lengths[][2], char output_strs[][MAX_FN_LENGTH]) {
+split_mode_t detect_split_mode(const char *outputs, const char *starts) {
+    if (strcmp(outputs, AUTO_MODE) == 0) {
+        if (is_numeric(starts)) {
+            return FIXED_LENGTH_MODE;
+        }
+        return AUTO_MODE_CUSTOM_TIMES;
+    }
+    return CUSTOM_MODE;
+}
+
+void generate_auto_filename(char *output, const char *input_filename, int index) {
+    char base_name[MAX_FILENAME];
+    strncpy(base_name, input_filename, MAX_FILENAME - 1);
+    char *dot = strrchr(base_name, '.');
+    if (dot) *dot = '\0';
     
-    unsigned short count   = 0;
+    snprintf(output, MAX_FN_LENGTH, "%s_%d", base_name, index + 1);
+}
 
-    char *rest_starts      = starts;
-    char *rest_ends        = ends;
-    char *rest_output_fns  = output_fns;
+unsigned short get_lengths(char *output_fns, char *starts, char *ends,float lengths[][2], char output_strs[][MAX_FN_LENGTH],const char *input_filename, audio_data *audio) {
+    
+    split_mode_t mode = detect_split_mode(output_fns, starts);
+    unsigned short count = 0;
 
-    char *start_token      = strtok_r(rest_starts, DELIMITER, &rest_starts);
-    char *end_token        = strtok_r(rest_ends, DELIMITER, &rest_ends);
-    char *output_fn_token  = strtok_r(rest_output_fns, DELIMITER, &rest_output_fns);
+    switch (mode) {
+        case FIXED_LENGTH_MODE: {
+            float segment_length = atof(starts);
+            float total_duration = (float)audio->num_samples / (audio->sample_rate * audio->channels);
+            float current_time = 0;
 
-    while (start_token != NULL && end_token != NULL && output_fn_token != NULL && count < MAX_SLICES) {
+            while (current_time < total_duration && count < MAX_SLICES) {
+                lengths[count][0] = current_time;
+                lengths[count][1] = current_time + segment_length;
+                if (lengths[count][1] > total_duration) {
+                    lengths[count][1] = total_duration;
+                }
+                generate_auto_filename(output_strs[count], input_filename, count);
+                current_time += segment_length;
+                count++;
+            }
+            break;
+        }
 
-        float start_value = atof(start_token);
-        float end_value   = atof(end_token);
+        case AUTO_MODE_CUSTOM_TIMES: {
+            char *rest_starts = starts;
+            char *rest_ends = ends;
+            char *start_token = strtok_r(rest_starts, DELIMITER, &rest_starts);
+            char *end_token = strtok_r(rest_ends, DELIMITER, &rest_ends);
 
-        lengths[count][0] = start_value;
-        lengths[count][1] = end_value;
+            while (start_token && end_token && count < MAX_SLICES) {
+                lengths[count][0] = atof(start_token);
+                lengths[count][1] = atof(end_token);
+                generate_auto_filename(output_strs[count], input_filename, count);
+                count++;
+                start_token = strtok_r(NULL, DELIMITER, &rest_starts);
+                end_token = strtok_r(NULL, DELIMITER, &rest_ends);
+            }
+            break;
+        }
 
-        strcpy(output_strs[count], output_fn_token);
+        case CUSTOM_MODE: {
+            char *rest_starts = starts;
+            char *rest_ends = ends;
+            char *rest_output_fns = output_fns;
+            char *start_token = strtok_r(rest_starts, DELIMITER, &rest_starts);
+            char *end_token = strtok_r(rest_ends, DELIMITER, &rest_ends);
+            char *output_fn_token = strtok_r(rest_output_fns, DELIMITER, &rest_output_fns);
 
-        count++;
-
-        start_token = strtok_r(NULL, DELIMITER, &rest_starts);
-        end_token   = strtok_r(NULL, DELIMITER, &rest_ends);
-        output_fn_token = strtok_r(NULL, DELIMITER, &rest_output_fns);
+            while (start_token && end_token && output_fn_token && count < MAX_SLICES) {
+                lengths[count][0] = atof(start_token);
+                lengths[count][1] = atof(end_token);
+                strncpy(output_strs[count], output_fn_token, MAX_FN_LENGTH - 1);
+                output_strs[count][MAX_FN_LENGTH - 1] = '\0';
+                count++;
+                start_token = strtok_r(NULL, DELIMITER, &rest_starts);
+                end_token = strtok_r(NULL, DELIMITER, &rest_ends);
+                output_fn_token = strtok_r(NULL, DELIMITER, &rest_output_fns);
+            }
+            break;
+        }
     }
 
     return count;
 }
 
+
+
 int main(int argc, char *argv[]) {
     if (argc != 5) {
-        fprintf(stderr, "Usage: %s <input mp3> <outputs> <starts> <ends>\n", argv[0]);
+        fprintf(stderr, "Usage: %s <input_file> <outputs> <starts> <ends>\n", argv[0]);
+        fprintf(stderr, "Modes:\n");
+        fprintf(stderr, "1. Custom names: <names> <start_times> <end_times>\n");
+        fprintf(stderr, "2. Auto names: AUTO <start_times> <end_times>\n");
+        fprintf(stderr, "3. Fixed length: AUTO <segment_length> \"\"\n");
         return 1;
     }
 
-        struct timespec start, end;
+    struct timespec start, end;
     clock_gettime(CLOCK_MONOTONIC, &start);
     
     float lengths[MAX_SLICES][2];
     char out_fns[MAX_SLICES][MAX_FN_LENGTH];
 
-    char *input_filename  = argv[1];
-    char *output_fns      = strdup(argv[2]);
-    char *starts          = strdup(argv[3]);
-    char *ends            = strdup(argv[4]);
+    char *input_filename = argv[1];
+    char *output_fns = strdup(argv[2]);
+    char *starts = strdup(argv[3]);
+    char *ends = strdup(argv[4]);
 
-    if (!starts || !ends) {
+    if (!starts || !ends || !output_fns) {
         fprintf(stderr, "Memory allocation failed\n");
         return 1;
     }
 
-    unsigned int length = get_lengths(output_fns, starts, ends, lengths, out_fns);
-
-    audio_type type    =  detect_audio_type(input_filename);
-
-    audio_data audio   = {0};
+    audio_type type = detect_audio_type(input_filename);
+    audio_data audio = {0};
 
     switch (type) {
         case 1:
@@ -348,26 +428,25 @@ int main(int argc, char *argv[]) {
             audio = read_wav(input_filename);
             break;
         default:
-            break;
+            fprintf(stderr, "Unsupported audio format\n");
+            return 1;
     }
+
+    unsigned int length = get_lengths(output_fns, starts, ends, lengths, out_fns, input_filename, &audio);
     
-    // pthreaded slices writing
-    async_sliced_write_wave(&audio,lengths,length,out_fns);
-     
-    // Normal slices writing
-    //sliced_write_wave(&audio,lengths,length,out_fns);
+    async_sliced_write_wave(&audio, lengths, length, out_fns);
+
+    // sliced_write_wave(&audio, lengths, length, out_fns);
+
 
     clock_gettime(CLOCK_MONOTONIC, &end);
-    
     long elapsed_time = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_nsec - start.tv_nsec) / 1000;
-
-    printf("Time taken: %ld microseconds\n", elapsed_time);
+    printf("\nTime taken: %ld microseconds\n", elapsed_time);
 
     free(starts);
     free(ends);
     free(output_fns);
+    free(audio.samples);
 
     return 0;
 }
-
-

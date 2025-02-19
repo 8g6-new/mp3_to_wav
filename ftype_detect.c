@@ -60,9 +60,7 @@ audio_type detect_audio_type(const char *filename) {
     int is_amr   = (*(uint32_t*)buffer == 0x524D4123); // AMR: "#!AMR"
 
 
-    
-
-    return is_wav * AUDIO_WAV |
+    audio_type type = is_wav * AUDIO_WAV |
            is_mp3 * AUDIO_MPEG |
            is_flac * AUDIO_FLAC |
            is_opus * AUDIO_OPUS |
@@ -70,6 +68,10 @@ audio_type detect_audio_type(const char *filename) {
            is_aac * AUDIO_AAC |
            is_amr * AUDIO_AMR |
            AUDIO_UNKNOWN;
+
+    printf("%s auto detected to be %s\n",filename,mime_types_map[type]);
+
+    return type;
 }
 
 static inline const char* get_mime_type(audio_type type) {
