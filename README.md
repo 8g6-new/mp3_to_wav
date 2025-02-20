@@ -31,7 +31,7 @@ This project provides a utility to slice MP3 or WAV audio files into multiple WA
 2. Compile source file (mp3_wav.c)
     ```bash
     gcc -mavx -o conv main.c -O3 -DMINIMP3_FLOAT_OUTPUT -lsndfile -march=native -ffast-math -funroll-loops -fomit-frame-pointer -flto
-```
+    ```
 
 
 # Audio Splitter Usage Guide
@@ -40,7 +40,7 @@ This project provides a utility to slice MP3 or WAV audio files into multiple WA
 For testing purposes download a sample file ( here I choose a xeno-canto bird audio recording )
 
 ```bash
-wget -O "test.mp3" "https://xeno-canto.org/973558/download"
+   wget -O "test.mp3" "https://xeno-canto.org/973558/download"
 ```
 
 The Audio Splitter tool allows you to split audio files (MP3 or WAV) into multiple segments using three different modes.
