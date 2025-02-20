@@ -48,9 +48,7 @@ The following table presents the average performance metrics for `ffmpeg` and `m
 
 *Assuming an average audio duration of **42.23 seconds** across the "Blue Jay" dataset.  Normalized values are per second of audio.*
 
-### Visualization
 
-A bar chart visualizing the average performance metrics for `ffmpeg` and `minimp3_decoder` would be helpful here to provide a quick visual comparison. *(Visualization generation is not included in this text-based report).*
 
 ## Analysis
 
