@@ -28,7 +28,7 @@ This project provides a utility to slice MP3 or WAV audio files into multiple WA
    cd mp3_to_wav
    ```
 
-2. Compile source file (mp3_wav.c)
+2. Compile source file (main.c)
     ```bash
     gcc -mavx -o conv main.c -O3 -DMINIMP3_FLOAT_OUTPUT -lsndfile -march=native -ffast-math -funroll-loops -fomit-frame-pointer -flto
     ```
