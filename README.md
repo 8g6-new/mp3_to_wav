@@ -30,7 +30,8 @@ This project provides a utility to slice MP3 or WAV audio files into multiple WA
 
 2. Compile source file (mp3_wav.c)
     ```bash
-    gcc -mavx -o conv main.c -O3 -DMINIMP3_FLOAT_OUTPUT -march=native -ffast-math-O3 -march=native  -funroll-loops -fomit-frame-pointer -flto
+    gcc -mavx -o conv main.c -O3 -DMINIMP3_FLOAT_OUTPUT -lsndfile -march=native -ffast-math -funroll-loops -fomit-frame-pointer -flto
+```
 
 
 # Audio Splitter Usage Guide
@@ -153,12 +154,11 @@ While a custom WAV reader was initially considered, the variety in WAV file form
 # Why this project 
 Initially, this project was created as a faster alternative to FFMPEG for converting MP3 to WAV, specifically to improve the preprocessing speed for generating spectrograms with my C-based spectrogram tool.
 
-In theory, my implementation should perform better since it avoids unnecessary processing and is optimized for this specific task. However, after running benchmarks, the results were surprising FFMPEG still outperforms my implementation by 1-2% in speed. Given that my code only handles a small subset of what FFMPEG can do (without format conversion overheads, filters, or optimizations at its scale), this experience gave me even more appreciation for FFMPEG’s engineering.
+In theory, my implementation should perform better since it avoids unnecessary processing and is optimized for this specific task. However, after running benchmarks, the results confirmed that my implementation is on avarge 1.8x faster [benchmark](https://github.com/8g6-new/mp3_to_wav/blob/main/benchmark/benchmark.md). This validates the approach of using a lightweight, dedicated MP3 decoder for this specific purpose. The benchmarks demonstrate that minimp3 achieves faster decoding times and lower resource utilization compared to FFmpeg for MP3-to-WAV conversion.
 
-That being said, this project is far from a wasted effort. A major advantage of having this custom MP3 decoder is that my spectrogram generator can now directly support MP3 files without requiring intermediate WAV conversions. This will significantly speed up processing since all MP3 data can be loaded into memory at once, eliminating the disk I/O bottleneck of repeatedly reading WAV slices.
+That being said, this project's value extends beyond just decoding speed. A key advantage of this custom MP3 decoder is that my spectrogram generator can now directly support MP3 files without requiring intermediate WAV conversions. This capability streamlines the processing pipeline and is expected to significantly speed up overall spectrogram generation by eliminating the disk I/O bottleneck associated with intermediate WAV files.
 
-There’s still room for optimization future improvements like better memory management, deeper profiling, and adding async I/O might help close the performance gap with FFMPEG or even surpass it in this specific use case. So, I’ll be giving this another attempt in the future.
-
+There’s still room for optimization. Future improvements like deeper profiling, and adding async I/O might further enhance the performance and resource efficiency of this MP3 decoding and slicing tool, potentially yielding even greater gains in real-world applications.
 ## License
 -------
 

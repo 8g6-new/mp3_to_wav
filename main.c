@@ -315,12 +315,7 @@ split_mode_t detect_split_mode(const char *outputs, const char *starts) {
 }
 
 void generate_auto_filename(char *output, const char *input_filename, int index) {
-    char base_name[MAX_FILENAME];
-    strncpy(base_name, input_filename, MAX_FILENAME - 1);
-    char *dot = strrchr(base_name, '.');
-    if (dot) *dot = '\0';
-    
-    snprintf(output, MAX_FN_LENGTH, "%s_%d", base_name, index + 1);
+    snprintf(output, MAX_FN_LENGTH, "%s_%d", input_filename, index + 1);
 }
 
 unsigned short get_lengths(char *output_fns, char *starts, char *ends,float lengths[][2], char output_strs[][MAX_FN_LENGTH],const char *input_filename, audio_data *audio) {
@@ -340,7 +335,7 @@ unsigned short get_lengths(char *output_fns, char *starts, char *ends,float leng
                 if (lengths[count][1] > total_duration) {
                     lengths[count][1] = total_duration;
                 }
-                generate_auto_filename(output_strs[count], input_filename, count);
+                generate_auto_filename(output_strs[count], ends, count);
                 current_time += segment_length;
                 count++;
             }
