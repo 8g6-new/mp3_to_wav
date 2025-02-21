@@ -2,6 +2,9 @@
 
 This project provides a utility to slice MP3 or WAV audio files into multiple WAV segments based on specified time ranges. It utilizes the [minimp3](https://github.com/lieff/minimp3) library for MP3 decoding, the [libsndfile](http://www.mega-nerd.com/libsndfile/) library for WAV file handling, and employs multithreading with pthreads and asynchronous I/O for optimized performance.
 
+
+[![wakatime](https://wakatime.com/badge/user/018c3e96-0fae-432d-add6-28d53961f8b4/project/b96a8a91-cf0c-4913-b637-80d62cf2aec9.svg)](https://wakatime.com/badge/user/018c3e96-0fae-432d-add6-28d53961f8b4/project/b96a8a91-cf0c-4913-b637-80d62cf2aec9)
+
 ## Features
 
 * Supports both MP3 and WAV input formats.
