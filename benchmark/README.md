@@ -4,7 +4,7 @@ This document presents a benchmark analysis comparing the audio decoding perform
 
 ## Dataset
 
-The benchmark was conducted using the "Blue Jay" audio dataset, comprising **195** audio files of varying durations. The audio files are located in the `./Blue Jay/` directory. The dataset's variability in audio length allows for a robust assessment of decoding performance across different file sizes.
+The benchmark was conducted using the "Blue Jay" audio dataset, comprising **195** audio files of varying durations. T
 
 ## Methodology
 
