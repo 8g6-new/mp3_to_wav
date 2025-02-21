@@ -4,7 +4,7 @@ This document presents a benchmark analysis comparing the audio decoding perform
 
 ## Dataset
 
-The benchmark was conducted using the "Blue Jay" audio dataset, comprising **195** audio files of varying durations. T
+The benchmark was conducted using the "Blue Jay" audio dataset, comprising **195** audio files of varying durations. 
 
 ## Methodology
 
