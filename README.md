@@ -9,7 +9,7 @@ This project provides a utility to slice MP3 or WAV audio files into multiple WA
 
 * Supports both MP3 and WAV input formats.
 * Uses [minimp3](https://github.com/lieff/minimp3) for MP3 decoding (included).
-* Employs [libsndfile](https://github.com/libsndfile/libsndfile) for WAV file reading and writing.
+* Employs [libsndfile](https://github.com/libsndfile/libsndfile) for WAV file reading.
 * Slices audio based on provided start and end times.
 * Flexible slicing for multiple segments.
 * Outputs each slice as a separate WAV file.
