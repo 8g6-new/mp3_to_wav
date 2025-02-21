@@ -4,9 +4,25 @@ This document presents a benchmark analysis comparing the audio decoding perform
 
 ## Dataset
 
-The benchmark was conducted using the "Blue Jay" audio dataset, comprising **32** audio files of varying durations. The audio files are located in the `./Blue Jay/` directory. The dataset's variability in audio length allows for a robust assessment of decoding performance across different file sizes.
+The benchmark was conducted using the "Blue Jay" audio dataset, comprising **195** audio files of varying durations. The audio files are located in the `./Blue Jay/` directory. The dataset's variability in audio length allows for a robust assessment of decoding performance across different file sizes.
 
 ## Methodology
+
+## System Information
+
+The benchmark was conducted on the following system:
+
+* **CPU:** AMD Ryzen 5 4600H with Radeon Graphics
+    * Architecture: x86_64 (64-bit)
+    * Cores/Threads: 6 cores / 12 threads
+    * Base Frequency: 3.0 GHz
+    * Cache: L1d: 192 KiB, L1i: 192 KiB, L2: 3 MiB, L3: 8 MiB
+* **GPU:** AMD ATI Radeon Vega Series / Radeon Vega Mobile Series
+* **Operating System:** Arch Linux x86_64
+* **Kernel:** 6.13.1-arch1-1
+* **Desktop Environment:** Plasma 6.2.5
+* **FFmpeg Version:** n7.1 Copyright (c) 2000-2024 the FFmpeg developers @ built with gcc 14.2.1 (GCC) 20240910
+
 
 Performance metrics were collected for each audio file using `perf stat` on the command-line invocations of both `ffmpeg` and the custom `minimp3_decoder` (named `minimp3_decoder` in results).  The script measured various resource utilization metrics for both decoding processes. These metrics include:
 
